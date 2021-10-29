@@ -1,17 +1,52 @@
-let width = 700;
-let height = 400;
-let rotation = 0;
-let flash = true;
+let width
+let height
+let rotation
+let flash
+let ratio
 
-leftEdge = -(width / 2) + 20
-rightEdge = (width / 2) - 20
-bottomPos = -height / 2
-topPos = height / 2
+let leftEdge
+let rightEdge
+let bottomPos
+let topPos
+let halfHeight
+let thirdHeight
+let quaterHeight
+
+function presetup(){
+
+
+    width = window.innerWidth - 5;
+    height = window.innerHeight - 5;
+    rotation = 0;
+    flash = true;
+    ratio = width / height
+
+    leftEdge = -(width / 2) + 20
+    rightEdge = (width / 2) - 20
+    bottomPos = -height / 2
+    topPos = height / 2
+    halfHeight = height / 2 - 20
+    thirdHeight = height / 3 - 20
+    quaterHeight = height / 4 - 20
+
+}
 
 function setup() {
+    presetup()
+
     createCanvas(width, height);
 
     setInterval(cicleModes, 5000);
+}
+
+function mouseClicked() {
+    try{
+    let fs = fullscreen();
+    fullscreen(!fs);
+    }catch{console.error("fullscreen does not work here");}
+
+    presetup()
+    createCanvas(width, height);
 }
 
 
@@ -26,7 +61,7 @@ function draw() {
 currentMode = 0
 totalModes = 4
 function cicleModes() {
-    currentMode = (currentMode + 1) % totalModes
+    currentMode = (currentMode + 1) % (totalModes + 1)
 
 }
 
@@ -51,11 +86,10 @@ function runMode(manualModeSelect = -1) {
             beamRotation = modeBeams(14, color(255, 0, 0), beamRotation, true, 120, true)
             break;
         case 4:
-            beamRotation1 = modeBeams(9, color(0, 0, 255), beamRotation1, true, 120)
-            beamRotation2 = modeBeams(7, color(0, 255, 0), beamRotation2, false, 80)
+            beamRotation1 = modeBeams(9, color(0, 0, 255), beamRotation1, true, thirdHeight)
+            beamRotation2 = modeBeams(7, color(0, 255, 0), beamRotation2, false, quaterHeight)
             break;
         case 5:
-
             testPingPont()
             break;
         case 99:
@@ -91,8 +125,8 @@ function modeFadingCircle() {
     colorMode(HSB);
     stroke(hueC, 255, 255)
     strokeWeight(5)
-    ellipse(v.x * 1.7, v.y, 140, 110);
-    ellipse(-v.x * 1.7, -v.y, 140, 110);
+    ellipse(v.x * ratio, v.y, 140, 110);
+    ellipse(-v.x * ratio, -v.y, 140, 110);
     colorMode(RGB)
     rotationCounter += rotationSpeed
 
