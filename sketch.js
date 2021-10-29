@@ -19,7 +19,7 @@ function draw() {
     translate(width / 2, height / 2)
     background(00);
 
-    runMode(99)
+    runMode() // nothing for cicle modes, number for specific, 99 for all
 }
 
 
