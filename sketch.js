@@ -83,11 +83,11 @@ function runMode(manualModeSelect = -1) {
             flash3Beams()
             break;
         case 3:
-            beamRotation = modeBeams(14, color(255, 0, 0), beamRotation, true, 120, true)
+            beamRotation = modeBeams(14, color(255, 0, 0), beamRotation, true, halfHeight, true)
             break;
         case 4:
-            beamRotation1 = modeBeams(9, color(0, 0, 255), beamRotation1, true, thirdHeight)
-            beamRotation2 = modeBeams(7, color(0, 255, 0), beamRotation2, false, quaterHeight)
+            beamRotation1 = modeBeams(9, color(0, 0, 255), beamRotation1, true, halfHeight)
+            beamRotation2 = modeBeams(7, color(0, 255, 0), beamRotation2, false, thirdHeight)
             break;
         case 5:
             testPingPont()
@@ -124,7 +124,7 @@ function modeFadingCircle() {
     noFill()
     colorMode(HSB);
     stroke(hueC, 255, 255)
-    strokeWeight(5)
+    strokeWeight(10)
     ellipse(v.x * ratio, v.y, 140, 110);
     ellipse(-v.x * ratio, -v.y, 140, 110);
     colorMode(RGB)
@@ -144,7 +144,7 @@ function flash3Beams() {
 }
 
 
-function modeBeams(number, c, currentRotation, direction = false, diameter = 100, changeHight) {
+function modeBeams(number, c, currentRotation, direction = false, diameter = halfHeight, changeHight) {
 
     currentRotation = direction ? currentRotation + 0.05 : currentRotation - 0.05
     pos = polarToCartesian(diameter, currentRotation)
@@ -153,10 +153,10 @@ function modeBeams(number, c, currentRotation, direction = false, diameter = 100
         pos = polarToCartesian(diameter, currentRotation + (i / number * 2 * Math.PI))
         if(changeHight){
 
-            drawDot(pos.x, pos.y * sin(currentRotation), c)
+            drawDot(pos.x*ratio, pos.y * sin(currentRotation), c)
         }
         else{
-            drawDot(pos.x, pos.y, c)
+            drawDot(pos.x*ratio, pos.y, c)
         }
     }
     return currentRotation
@@ -175,7 +175,7 @@ function polarToCartesian(r, theta) {
 
 
 function drawDot(x, y, c) {
-    strokeWeight(10);
+    strokeWeight(20);
     stroke(c)
     point(x, y);
 }
@@ -190,7 +190,7 @@ function modeScannerHorizontal() {
 scannerCounter = 0
 scannerSpeed = 1
 scannerSteps = 200
-scannerWidth = 10
+scannerWidth = 15
 
 
 function movingBarLeftRight(singleDouble) {
