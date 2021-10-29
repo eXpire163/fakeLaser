@@ -80,13 +80,13 @@ function runMode(manualModeSelect = -1) {
             modeFadingCircle();
             break;
         case 2:
-            flash3Beams()
+            flashBeamRotation = modeBeams(3, color(255, 255, 255), flashBeamRotation, false)
             break;
         case 3:
-            beamRotation = modeBeams(14, color(255, 0, 0), beamRotation, true, halfHeight, true)
+            beamRotation = modeBeams(14, color(0, 255, 255), beamRotation, true, halfHeight, true)
             break;
         case 4:
-            beamRotation1 = modeBeams(9, color(0, 0, 255), beamRotation1, true, halfHeight)
+            beamRotation1 = modeBeams(9, color(255, 0, 0), beamRotation1, true, halfHeight)
             beamRotation2 = modeBeams(7, color(0, 255, 0), beamRotation2, false, thirdHeight)
             break;
         case 5:
