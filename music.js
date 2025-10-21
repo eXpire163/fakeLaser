@@ -20,12 +20,25 @@ let beam
 
 var song
 var fft
-
 var bar
+
+// Audio analysis variables
+var songDuration = 0
+var audioLevels = []
+var isAnalyzing = false
+var currentSecond = 0
+var barWidth = 0
 
 
 function preload() {
-    song = loadSound('assets/zf.mp3');
+    song = loadSound('assets/zf.mp3', () => {
+        console.log('Song loaded successfully');
+        songDuration = song.duration();
+        console.log('Song duration:', songDuration, 'seconds');
+        // Initialize array to store audio levels for each second
+        audioLevels = new Array(Math.ceil(songDuration)).fill(0);
+        barWidth = width / audioLevels.length;
+    });
 }
 
 function setup() {
@@ -64,30 +77,31 @@ function setup() {
     }
     createCanvas(width, height);
 
+    // Calculate bar width based on song duration
+    if (songDuration > 0) {
+        barWidth = width / Math.ceil(songDuration);
+    }
+
     bar = new Bar(settings);
 }
 
 function draw() {
     background(20);
     translate(width / 2, height / 2)
-    //var spectrum = fft.waveform();
+
+    // Analyze current audio
     fft.analyze();
     var spectrum = fft.getEnergy("bass");
     var moove = spectrum > 200 ? 2 : 0
     bar.movingBarLeftRight(true, moove);
-    //console.log(spectrum);
 
+    // If song is playing, collect audio level data
+    if (song.isPlaying()) {
+        collectAudioLevels();
+    }
 
-
-    //fill(spectrum, 255, 255);
-    // rect(width / 2 - spectrum, height / 2 - spectrum, spectrum * 2, spectrum * 2);
-    // for (var i = 0; i < spectrum.length; i++) {
-
-    //     var x = i * 40;
-    //     var rHeight = map(spectrum[i], 0, 1, 0, height);
-    //     fill(x % 254, 255, 255); // spectrum is purple
-    //     rect(x, height / 2, 10, rHeight);
-    // }
+    // Draw the audio level bars
+    drawAudioLevelBars();
 }
 
 function mouseClicked() {
@@ -96,4 +110,57 @@ function mouseClicked() {
     } else {
         song.play();
     }
+}
+
+function collectAudioLevels() {
+    if (songDuration > 0) {
+        // Get current time in the song
+        let currentTime = song.currentTime() * 10.0;
+        console.log('Current time:', currentTime, 'seconds');
+        let secondIndex = Math.floor(currentTime);
+
+        // Get overall energy level
+        let energy = fft.getEnergy(20, 20000); // Full frequency range
+
+        // Store the maximum energy for this second (to capture peaks)
+        if (secondIndex < audioLevels.length) {
+            audioLevels[secondIndex] = Math.max(audioLevels[secondIndex], energy);
+        }
+    }
+}
+
+function drawAudioLevelBars() {
+    if (audioLevels.length === 0) return;
+
+    push();
+    // Reset translation to draw from bottom of screen
+    translate(-width / 2, height / 2);
+
+    // Draw bars for each second
+    for (let i = 0; i < audioLevels.length; i++) {
+        let level = audioLevels[i];
+        let barHeight = map(level, 0, 255, 0, height * 0.8); // Scale to 80% of screen height
+
+        // Color based on intensity
+        let hue = map(level, 0, 255, 240, 0); // Blue to red
+        colorMode(HSB);
+        fill(hue, 255, 255, 150); // Semi-transparent
+        noStroke();
+
+        // Draw bar from bottom up
+        rect(i * barWidth / 10, -barHeight, barWidth - 1, barHeight);
+    }
+
+    // Draw current playback position
+    if (song.isPlaying()) {
+        let currentTime = song.currentTime();
+        let currentX = (currentTime / songDuration) * width;
+
+        stroke(255, 255, 255);
+        strokeWeight(2);
+        line(currentX, -height, currentX, 0);
+    }
+
+    colorMode(RGB);
+    pop();
 }
