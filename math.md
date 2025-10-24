@@ -50,3 +50,12 @@ cool audio works now.
 I could imagine that having only one melody might get boring pretty soon. can you add 8 more success sounds please and play them in random order?
 
 I found a bug, when running out of time i loose all lives at ones (or maybe one per frame, not really clear). i should only loose one live and see the normal incorrect feedback and then go to the next equastion
+
+
+## NEXT
+
+Prompt 7
+
+Lets work on the design. I have mindcraft in mind. So Starting with a gras green background via timebar made out of mindcraft stones. Also adjust the style of all texts to the new mindcraft theme. If you don't find images that could be usefull. insert some placeholders and i try to find some.
+
+the timebar could also be a creaper that runs towards you and you can defend it with the correct answer and show it as a shooting arrow. just as an idea.

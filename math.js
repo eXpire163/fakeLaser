@@ -10,11 +10,15 @@ let lastFrameTime = 0;
 let feedbackState = null; // 'correct' or 'incorrect'
 let feedbackTimer = 0;
 let feedbackDuration = 0.7; // seconds
+let creeperX = 0; // Creeper position for animation
 
 // ===== SOUND =====
 let successOsc, failOsc;
 let envelope;
 let audioReady = false;
+
+// ===== MINECRAFT FONT =====
+let minecraftFont;
 
 // ===== SETUP =====
 function setup() {
@@ -24,6 +28,12 @@ function setup() {
 
     // Initialize sound synthesizers for retro NES-style sounds
     setupSounds();
+}
+
+function preload() {
+    // TODO: Load Minecraft font when available
+    // minecraftFont = loadFont('assets/Minecraft.ttf');
+    // For now, we'll use a blocky system font
 }
 
 // ===== SOUND SETUP =====
@@ -132,7 +142,8 @@ function windowResized() {
 
 // ===== MAIN DRAW LOOP =====
 function draw() {
-    background(20, 20, 40);
+    // Minecraft grass background
+    drawMinecraftBackground();
 
     if (gameState === 'waiting') {
         drawWaitingScreen();
@@ -147,39 +158,71 @@ function draw() {
     }
 }
 
+// ===== MINECRAFT BACKGROUND =====
+function drawMinecraftBackground() {
+    // Grass block texture (simplified)
+    // Top layer - bright grass green
+    fill(106, 190, 48);
+    rect(0, 0, width, height * 0.7);
+
+    // Draw grass texture pattern
+    noStroke();
+    for (let i = 0; i < 50; i++) {
+        let x = random(width);
+        let y = random(height * 0.7);
+        fill(120, 200, 60, 100);
+        rect(x, y, random(2, 5), random(2, 5));
+    }
+
+    // Bottom layer - dirt brown
+    fill(134, 96, 67);
+    rect(0, height * 0.7, width, height * 0.3);
+
+    // Add dirt texture
+    for (let i = 0; i < 40; i++) {
+        let x = random(width);
+        let y = height * 0.7 + random(height * 0.3);
+        fill(110, 80, 55, 150);
+        rect(x, y, random(3, 6), random(3, 6));
+    }
+}
+
 // ===== WAITING SCREEN =====
 function drawWaitingScreen() {
-    fill(255);
-    textSize(64);
-    text('Math Training', width / 2, height / 2 - 100);
+    // Title with Minecraft style
+    drawMinecraftText('MATH CRAFT', width / 2, height / 2 - 120, 72, color(255, 255, 100));
 
-    textSize(32);
-    text('Practice your multiplication tables!', width / 2, height / 2 - 20);
+    drawMinecraftText('Mine your multiplication skills!', width / 2, height / 2 - 30, 28, color(255, 255, 255));
 
-    textSize(24);
-    fill(100, 255, 100);
-    text('Press SPACE to start', width / 2, height / 2 + 80);
+    drawMinecraftText('Press SPACE to start', width / 2, height / 2 + 60, 32, color(100, 255, 100));
 
-    textSize(18);
-    fill(200);
-    text('Answer equations before time runs out!', width / 2, height / 2 + 140);
-    text('Just type your answer - it auto-submits!', width / 2, height / 2 + 170);
-    text('Use BACKSPACE to correct mistakes', width / 2, height / 2 + 200);
+    // Instructions
+    drawMinecraftText('Defend against the Creeper with correct answers!', width / 2, height / 2 + 130, 18, color(200, 200, 200));
+    drawMinecraftText('Type your answer - it auto-submits!', width / 2, height / 2 + 160, 18, color(200, 200, 200));
+    drawMinecraftText('Use BACKSPACE to correct mistakes', width / 2, height / 2 + 190, 18, color(200, 200, 200));
+}
+
+// ===== MINECRAFT-STYLE TEXT =====
+function drawMinecraftText(txt, x, y, size, col) {
+    // Add black shadow/outline for Minecraft look
+    fill(0);
+    textSize(size);
+    textStyle(BOLD);
+    text(txt, x + 3, y + 3);
+
+    // Main text
+    fill(col);
+    text(txt, x, y);
 }
 
 // ===== GAME OVER SCREEN =====
 function drawGameOverScreen() {
-    fill(255, 100, 100);
-    textSize(72);
-    text('GAME OVER', width / 2, height / 2 - 100);
+    drawMinecraftText('GAME OVER', width / 2, height / 2 - 100, 72, color(255, 100, 100));
+    drawMinecraftText('You were destroyed!', width / 2, height / 2 - 30, 32, color(255, 150, 150));
 
-    fill(255);
-    textSize(48);
-    text(`Final Score: ${score}`, width / 2, height / 2);
+    drawMinecraftText(`Final Score: ${score}`, width / 2, height / 2 + 30, 48, color(255, 255, 100));
 
-    textSize(24);
-    fill(100, 255, 100);
-    text('Press SPACE to play again', width / 2, height / 2 + 100);
+    drawMinecraftText('Press SPACE to respawn', width / 2, height / 2 + 100, 28, color(100, 255, 100));
 }
 
 // ===== MAIN GAME DRAWING =====
@@ -196,43 +239,74 @@ function drawGame() {
 
 // ===== HUD (SCORE & LIVES) =====
 function drawHUD() {
-    // Score
-    fill(255);
-    textSize(32);
+    // Score display with Minecraft style
     textAlign(LEFT, TOP);
-    text(`Score: ${score}`, 40, 40);
+    drawMinecraftText(`Score: ${score}`, 40, 40, 32, color(255, 255, 100));
 
-    // Lives (hearts)
+    // Lives display with hearts (Minecraft style)
     textAlign(LEFT, TOP);
-    let heartX = width - 250;
+    let heartX = width - 280;
     let heartY = 40;
-    textSize(36);
+
+    // Draw filled hearts
     for (let i = 0; i < lives; i++) {
-        fill(255, 50, 50);
-        text('❤', heartX + i * 45, heartY);
+        drawMinecraftHeart(heartX + i * 50, heartY, true);
     }
 
-    // Empty hearts for lost lives
+    // Draw empty hearts
     for (let i = lives; i < 5; i++) {
-        fill(80, 80, 80);
-        text('❤', heartX + i * 45, heartY);
+        drawMinecraftHeart(heartX + i * 50, heartY, false);
     }
+}
+
+// ===== MINECRAFT-STYLE HEART =====
+function drawMinecraftHeart(x, y, filled) {
+    push();
+    translate(x, y);
+
+    if (filled) {
+        // Filled red heart
+        fill(255, 0, 0);
+        stroke(139, 0, 0);
+    } else {
+        // Empty heart (dark)
+        fill(80, 80, 80);
+        stroke(40, 40, 40);
+    }
+
+    strokeWeight(2);
+    // Blocky Minecraft-style heart
+    beginShape();
+    vertex(15, 10);
+    vertex(10, 5);
+    vertex(5, 5);
+    vertex(0, 10);
+    vertex(0, 15);
+    vertex(15, 30);
+    vertex(30, 15);
+    vertex(30, 10);
+    vertex(25, 5);
+    vertex(20, 5);
+    vertex(15, 10);
+    endShape(CLOSE);
+
+    pop();
 }
 
 // ===== EQUATION DISPLAY =====
 function drawEquation() {
     textAlign(CENTER, CENTER);
-    fill(255);
-    textSize(64);
 
     let equation = `${currentEquation.num1} × ${currentEquation.num2} =`;
-    text(equation, width / 2, height / 2 - 80);
+    drawMinecraftText(equation, width / 2, height / 2 - 80, 64, color(255, 255, 255));
 
-    // User input
-    fill(100, 200, 255);
-    textSize(72);
+    // User input with stone panel background
+    let inputBoxWidth = 200;
+    let inputBoxHeight = 100;
+    drawStonePanel(width / 2 - inputBoxWidth / 2, height / 2 - 20, inputBoxWidth, inputBoxHeight);
+
     let displayInput = userInput || '_';
-    text(displayInput, width / 2, height / 2 + 20);
+    drawMinecraftText(displayInput, width / 2, height / 2 + 30, 72, color(255, 255, 100));
 }
 
 // ===== FEEDBACK DISPLAY =====
@@ -243,19 +317,56 @@ function drawFeedback() {
     textAlign(CENTER, CENTER);
 
     // Color based on correct/incorrect
+    let textColor;
     if (feedbackState === 'correct') {
-        fill(50, 255, 50); // Bright green
+        textColor = color(100, 255, 100); // Bright green
+        // Show arrow hitting creeper
+        drawArrowHit();
     } else {
-        fill(255, 50, 50); // Bright red
+        textColor = color(255, 100, 100); // Bright red
+        // Show explosion effect
+        drawExplosion();
     }
 
-    textSize(64);
     let equation = `${currentEquation.num1} × ${currentEquation.num2} =`;
-    text(equation, width / 2, height / 2 - 80);
+    drawMinecraftText(equation, width / 2, height / 2 - 80, 64, textColor);
 
-    // Show the answer
-    textSize(72);
-    text(currentEquation.answer, width / 2, height / 2 + 20);
+    // Show the answer in stone panel
+    let inputBoxWidth = 200;
+    let inputBoxHeight = 100;
+    drawStonePanel(width / 2 - inputBoxWidth / 2, height / 2 - 20, inputBoxWidth, inputBoxHeight);
+    drawMinecraftText(currentEquation.answer.toString(), width / 2, height / 2 + 30, 72, textColor);
+}
+
+// ===== ARROW HIT ANIMATION =====
+function drawArrowHit() {
+    // Simple arrow graphic
+    push();
+    translate(width / 2 + 300, height / 2 + 120);
+    fill(139, 90, 43); // Brown
+    stroke(0);
+    strokeWeight(2);
+    rect(-40, -3, 60, 6); // Arrow shaft
+    fill(180, 180, 180); // Gray
+    triangle(20, 0, 35, -8, 35, 8); // Arrow head
+    pop();
+}
+
+// ===== EXPLOSION ANIMATION =====
+function drawExplosion() {
+    // Simple explosion effect
+    push();
+    translate(width / 2 + 300, height / 2 + 120);
+    noStroke();
+    for (let i = 0; i < 8; i++) {
+        let angle = (TWO_PI / 8) * i;
+        let distance = 20 + random(20);
+        let x = cos(angle) * distance;
+        let y = sin(angle) * distance;
+        fill(255, random(100, 255), 0, 200);
+        ellipse(x, y, random(10, 25));
+    }
+    pop();
 }
 
 function updateFeedback() {
@@ -276,28 +387,92 @@ function updateFeedback() {
     }
 }
 
-// ===== TIMER BAR =====
+// ===== TIMER BAR (CREEPER APPROACHING) =====
 function drawTimerBar() {
-    let barWidth = 400;
-    let barHeight = 20;
+    let barWidth = 600;
+    let barHeight = 50;
     let barX = width / 2 - barWidth / 2;
-    let barY = height / 2 + 120;
+    let barY = height / 2 + 140;
 
-    // Background
-    fill(60);
-    noStroke();
-    rect(barX, barY, barWidth, barHeight, 10);
+    // Draw stone background bar
+    drawStonePanel(barX, barY, barWidth, barHeight);
 
-    // Timer fill
-    let fillAmount = (timeRemaining / timeLimit) * barWidth;
-    if (timeRemaining / timeLimit > 0.5) {
-        fill(100, 255, 100);
-    } else if (timeRemaining / timeLimit > 0.25) {
-        fill(255, 200, 50);
-    } else {
-        fill(255, 100, 100);
+    // Calculate creeper position based on time remaining
+    let creeperProgress = 1 - (timeRemaining / timeLimit);
+    creeperX = barX + (barWidth - 60) * creeperProgress;
+
+    // Draw creeper (placeholder - simplified version)
+    drawCreeper(creeperX, barY - 20);
+
+    // Add "danger" text when time is low
+    if (timeRemaining / timeLimit < 0.3) {
+        push();
+        textAlign(CENTER, CENTER);
+        let flashAlpha = (sin(frameCount * 0.3) + 1) * 127;
+        drawMinecraftText('CREEPER APPROACHING!', width / 2, barY - 60, 24, color(255, 50, 50, flashAlpha));
+        pop();
     }
-    rect(barX, barY, fillAmount, barHeight, 10);
+}
+
+// ===== STONE PANEL (MINECRAFT STYLE) =====
+function drawStonePanel(x, y, w, h) {
+    // Stone background
+    fill(127, 127, 127);
+    stroke(80, 80, 80);
+    strokeWeight(3);
+    rect(x, y, w, h);
+
+    // Add stone texture
+    noStroke();
+    for (let i = 0; i < 20; i++) {
+        let rx = x + random(w);
+        let ry = y + random(h);
+        fill(random(100, 150), random(100, 150), random(100, 150), 100);
+        rect(rx, ry, random(3, 8), random(3, 8));
+    }
+
+    // Highlight edge (3D effect)
+    stroke(180, 180, 180);
+    strokeWeight(2);
+    line(x, y, x + w, y);
+    line(x, y, x, y + h);
+
+    // Shadow edge
+    stroke(60, 60, 60);
+    line(x + w, y, x + w, y + h);
+    line(x, y + h, x + w, y + h);
+}
+
+// ===== CREEPER (PLACEHOLDER) =====
+function drawCreeper(x, y) {
+    // TODO: Replace with actual creeper image when available
+    // For now: simplified green pixelated creeper
+    push();
+    noStroke();
+
+    // Body (green)
+    fill(0, 124, 0);
+    rect(x, y + 20, 60, 80);
+
+    // Head
+    rect(x + 10, y, 40, 40);
+
+    // Face - eyes
+    fill(0);
+    rect(x + 15, y + 10, 8, 12);
+    rect(x + 37, y + 10, 8, 12);
+
+    // Face - mouth
+    rect(x + 25, y + 25, 5, 8);
+    rect(x + 20, y + 28, 5, 5);
+    rect(x + 35, y + 28, 5, 5);
+    rect(x + 25, y + 33, 10, 5);
+
+    // Feet
+    rect(x + 5, y + 100, 20, 15);
+    rect(x + 35, y + 100, 20, 15);
+
+    pop();
 }
 
 // ===== TIMER UPDATE =====
@@ -436,9 +611,9 @@ function keyPressed() {
 // ==========================================
 // - [ ] Add highscore tracking system (local storage)
 // - [x] Add sound effects (correct answer, wrong answer, lose life) ✓
-// - [ ] Add background music
+// - [ ] Add background music (C418 Minecraft style)
 // - [ ] Add animations (score pop-up, shake on wrong answer)
-// - [ ] Add particle effects for correct answers
+// - [ ] Add particle effects for correct answers (block breaking effect)
 // - [ ] Add difficulty levels (easy: 1-5, medium: 1-10, hard: 1-15)
 // - [ ] Add different operation modes (addition, subtraction, division)
 // - [ ] Add combo multiplier for consecutive correct answers
@@ -449,4 +624,15 @@ function keyPressed() {
 // - [ ] Add game over sound
 // - [ ] Add start game sound
 // - [ ] Add time running out warning sound
+// - [x] Minecraft theme design ✓
+//
+// MINECRAFT ASSETS TO ADD:
+// - [ ] assets/minecraft-font.ttf (Minecraft font file)
+// - [ ] assets/grass-block.png (grass texture)
+// - [ ] assets/stone.png (stone texture)
+// - [ ] assets/creeper.png (creeper sprite)
+// - [ ] assets/arrow.png (arrow sprite)
+// - [ ] assets/explosion.png (explosion sprite sheet)
+// - [ ] assets/heart-full.png (full heart icon)
+// - [ ] assets/heart-empty.png (empty heart icon)
 // ==========================================
