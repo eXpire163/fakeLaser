@@ -84,7 +84,7 @@ function setup() {
 
     bar = new Bar(settings);
 }
-
+let moovesum = 0
 function draw() {
     background(20);
     translate(width / 2, height / 2)
@@ -93,7 +93,19 @@ function draw() {
     fft.analyze();
     var spectrum = fft.getEnergy("bass");
     var moove = spectrum > 200 ? 2 : 0
-    bar.movingBarLeftRight(true, moove);
+    moovesum += moove;
+    if (moovesum > 400) {
+        bar.movingBarSplitterTopBottom(7, moove);
+    } else if (moovesum > 800) {
+        moovesum = 0; // Reset after a certain threshold
+
+    } else {
+        bar.movingBarLeftRight(true, moove);
+    }
+    //console.log('Moovesum:', moovesum);
+
+
+    //bar.movingBarLeftRight(true, moove);
 
     // If song is playing, collect audio level data
     if (song.isPlaying()) {
@@ -116,7 +128,7 @@ function collectAudioLevels() {
     if (songDuration > 0) {
         // Get current time in the song
         let currentTime = song.currentTime() * 10.0;
-        console.log('Current time:', currentTime, 'seconds');
+        //console.log('Current time:', currentTime, 'seconds');
         let secondIndex = Math.floor(currentTime);
 
         // Get overall energy level
@@ -148,7 +160,7 @@ function drawAudioLevelBars() {
         noStroke();
 
         // Draw bar from bottom up
-        rect(i * barWidth / 10, -barHeight, barWidth - 1, barHeight);
+        rect(i * barWidth / 10, -barHeight, barWidth / 10 - 1, barHeight);
     }
 
     // Draw current playback position

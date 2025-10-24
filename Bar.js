@@ -38,10 +38,10 @@ class Bar {
     }
 
 
-    movingBarSplitterTopBottom(splits) {
+    movingBarSplitterTopBottom(splits, scannerSpeed = 1) {
 
 
-        this.scannerCounter += this.scannerSpeed
+        this.scannerCounter += scannerSpeed
         this.scannerCounter = this.scannerCounter % this.scannerSteps
 
         let sectionWidth = width / splits
