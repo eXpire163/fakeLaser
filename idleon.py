@@ -52,6 +52,51 @@ def find_all_wands(data: Dict) -> List[Tuple[str, int, Dict]]:
 
     return wands
 
+def find_all_rings(data: Dict) -> List[Tuple[str, int, Dict]]:
+    """
+    Find all Arcane rings across all characters' inventories.
+
+    Returns:
+        List of tuples: (character_id, slot_number, item_id, ring_stats)
+    """
+    rings = []
+
+    # Iterate through all possible character slots (0-9)
+    for char_id in range(10):
+        inventory_key = f'InventoryOrder_{char_id}'
+        stats_key = f'IMm_{char_id}'
+
+        # Check if this character exists
+        if inventory_key not in data or stats_key not in data:
+            continue
+
+        inventory_order = data[inventory_key]
+
+        # Parse the stats JSON string
+        try:
+            stats_dict = json.loads(data[stats_key])
+        except (json.JSONDecodeError, TypeError):
+            continue
+
+        # Iterate through ALL inventory slots (not just 11 and 15)
+        for slot_num, item_id in enumerate(inventory_order):
+            # Check if it's an Arcane ring (EquipmentRingsArc0)
+            if item_id == 'EquipmentRingsArc0':
+                # Get stats for this slot if they exist
+                slot_key = str(slot_num)
+                if slot_key in stats_dict:
+                    item_stats = stats_dict[slot_key]
+                    # Rings should have unique stats
+                    if 'UQ1val' in item_stats or 'UQ2val' in item_stats:
+                        rings.append((
+                            f'Character_{char_id}',
+                            slot_num,
+                            item_id,
+                            item_stats
+                        ))
+
+    return rings
+
 def get_top_wands(wands: List[Tuple[str, int, Dict]], top_n: int = 5) -> List[Dict]:
     """
     Get the top N wands by weapon power.
@@ -74,8 +119,9 @@ def get_top_wands(wands: List[Tuple[str, int, Dict]], top_n: int = 5) -> List[Di
 
         # Calculate bucket (page) and position within bucket
         # Inventory is split into buckets of 16 items
-        bucket_num = slot_num // 16
-        position_in_bucket = slot_num % 16
+        # Add 1 to make it 1-indexed (more human-readable)
+        bucket_num = (slot_num // 16) + 1
+        position_in_bucket = (slot_num % 16) + 1
 
         wand_info.append({
             'Character': char_id,
@@ -96,6 +142,54 @@ def get_top_wands(wands: List[Tuple[str, int, Dict]], top_n: int = 5) -> List[Di
     # Return top N
     return wand_info[:top_n]
 
+def get_top_rings_by_stat(rings: List[Tuple[str, int, str, Dict]], stat_num: int = 1, top_n: int = 5) -> List[Dict]:
+    """
+    Get the top N rings by a specific unique stat.
+
+    Args:
+        rings: List of ring tuples from find_all_rings
+        stat_num: Which stat to sort by (1 or 2)
+        top_n: Number of top rings to return
+
+    Returns:
+        List of dictionaries with ring information
+    """
+    ring_info = []
+
+    for char_id, slot_num, item_id, stats in rings:
+        uq1_val = stats.get('UQ1val', 0)
+        uq2_val = stats.get('UQ2val', 0)
+        uq1_txt = stats.get('UQ1txt', 'Unknown')
+        uq2_txt = stats.get('UQ2txt', 'Unknown')
+
+        # Calculate bucket (page) and position within bucket
+        bucket_num = (slot_num // 16) + 1
+        position_in_bucket = (slot_num % 16) + 1
+
+        ring_info.append({
+            'Character': char_id,
+            'Bucket': bucket_num,
+            'Position': position_in_bucket,
+            'Slot': slot_num,
+            'Item Type': item_id,
+            'Unique Stat 1': f'{uq1_val}% ({uq1_txt})',
+            'Unique Stat 2': f'{uq2_val}% ({uq2_txt})',
+            'UQ1val': uq1_val,
+            'UQ2val': uq2_val,
+            'WIS': stats.get('WIS', 0),
+            'Defence': stats.get('Defence', 0),
+            'Upgrades Used': abs(stats.get('Upgrade_Slots_Left', 0))
+        })
+
+    # Sort by the specified stat (descending)
+    if stat_num == 1:
+        ring_info.sort(key=lambda x: x['UQ1val'], reverse=True)
+    else:
+        ring_info.sort(key=lambda x: x['UQ2val'], reverse=True)
+
+    # Return top N
+    return ring_info[:top_n]
+
 def display_wand_table(wands: List[Dict]):
     """Display wands in a formatted table."""
     if not wands:
@@ -107,7 +201,7 @@ def display_wand_table(wands: List[Dict]):
         'Rank',
         'Character',
         'Bucket\n(Page)',
-        'Position\n(0-15)',
+        'Position\n(1-16)',
         'Total\nSlot',
         'Weapon\nPower',
         'Unique Stat 1',
@@ -138,22 +232,77 @@ def display_wand_table(wands: List[Dict]):
     print(tabulate(table_data, headers=headers, tablefmt='grid'))
     print("="*140 + "\n")
 
+def display_ring_table(rings: List[Dict], stat_name: str):
+    """Display rings in a formatted table."""
+    if not rings:
+        print("No rings found in slots 11 and 15!")
+        return
+
+    # Prepare table data
+    headers = [
+        'Rank',
+        'Character',
+        'Bucket\n(Page)',
+        'Position\n(1-16)',
+        'Total\nSlot',
+        'Unique Stat 1',
+        'Unique Stat 2',
+        'WIS',
+        'Defence',
+        'Upgrades'
+    ]
+
+    table_data = []
+    for rank, ring in enumerate(rings, start=1):
+        table_data.append([
+            rank,
+            ring['Character'],
+            ring['Bucket'],
+            ring['Position'],
+            ring['Slot'],
+            ring['Unique Stat 1'],
+            ring['Unique Stat 2'],
+            ring['WIS'],
+            ring['Defence'],
+            ring['Upgrades Used']
+        ])
+
+    # Print the table
+    print("\n" + "="*140)
+    print(f"TOP 5 ARCANE RINGS (EquipmentRingsArc0) BY {stat_name}".center(140))
+    print("="*140)
+    print(tabulate(table_data, headers=headers, tablefmt='grid'))
+    print("="*140 + "\n")
+
 def main():
-    """Main function to analyze wands."""
+    """Main function to analyze wands and rings."""
     print("Loading IdleOn save file...")
 
     try:
         data = load_idleon_data('idleon.json')
         print("✓ Save file loaded successfully!")
 
+        # Analyze Wands
         print("\nSearching for Arcane wands (EquipmentWandsArc0) across all characters...")
         all_wands = find_all_wands(data)
         print(f"✓ Found {len(all_wands)} Arcane wands total!")
 
         print("\nAnalyzing weapon power...")
         top_wands = get_top_wands(all_wands, top_n=5)
-
         display_wand_table(top_wands)
+
+        # Analyze Rings
+        print("\nSearching for Arcane rings (EquipmentRingsArc0) across all characters...")
+        all_rings = find_all_rings(data)
+        print(f"✓ Found {len(all_rings)} Arcane rings total!")
+
+        print("\nAnalyzing rings by Unique Stat 1...")
+        top_rings_stat1 = get_top_rings_by_stat(all_rings, stat_num=1, top_n=5)
+        display_ring_table(top_rings_stat1, "UNIQUE STAT 1")
+
+        print("\nAnalyzing rings by Unique Stat 2...")
+        top_rings_stat2 = get_top_rings_by_stat(all_rings, stat_num=2, top_n=5)
+        display_ring_table(top_rings_stat2, "UNIQUE STAT 2")
 
     except FileNotFoundError:
         print("❌ Error: idleon.json file not found!")
